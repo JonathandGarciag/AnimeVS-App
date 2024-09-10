@@ -1,30 +1,51 @@
+const api_url = 'https://kitsu.io/api/edge/anime';
 
-const api_url = 'https://kitsu.io/api/edge/anime'
-
-export const reqAnimePortada = async (animeTitle) => {
-    
-    const resp = await fetch(`${api_url}?filter[text]=${animeTitle}`);
+// Función para obtener animes paginados y su información
+export const reqAnimeList = async (page) => {
+    const resp = await fetch(`${api_url}?page[limit]=12&page[offset]=${page * 10}`);
     const { data } = await resp.json();
-    const animeData = data.map(anime => ({
+  
+    const animeList = data.map(anime => ({
+        id: anime.id,
+        title: anime.attributes.titles.en_jp,
         posterImage: anime.attributes.posterImage?.medium,
-        titles: anime.attributes.titles?.en_jp,
         episodeCount: anime.attributes.episodeCount,
+        startDate: anime.attributes.startDate,
+        endDate: anime.attributes.endDate,
+        ageRatingGuide: anime.attributes.ageRatingGuide || 'N/A',
+        status: anime.attributes.status || 'Desconocido'
     }));
-    
-    return animeData; 
+
+    return animeList;
 };
 
-    /*posterImage: anime.attributes.posterImage?.medium,
-    titles: anime.attributes.titles?.en_jp,
-    synopsis: anime.attributes.synopsis,
-    averageRating: anime.attributes.averageRating,
-    startDate: anime.attributes.startDate,
-    endDate: anime.attributes.endDate,
-    ageRatingGuide: anime.attributes.ageRatingGuide,
-    status: anime.attributes.status,
-    episodeCount: anime.attributes.episodeCount,
-    episodes: anime.relationships.episodes*/
+// Función para buscar anime por nombre
+export const reqAnimeDetails = async (animeTitle) => {
+    const resp = await fetch(`${api_url}?filter[text]=${animeTitle}`);
+    const { data } = await resp.json();
 
+    if (data.length === 0) return null;
+
+    const animeDetails = data[0].attributes;
+    const anime = {
+        title: animeDetails.titles.en_jp,
+        synopsis: animeDetails.synopsis,
+        episodes: animeDetails.episodeCount,
+        startDate: animeDetails.startDate,
+        endDate: animeDetails.endDate,
+        posterImage: animeDetails.posterImage?.medium,
+    };
+
+    const episodesResp = await fetch(`${api_url}/${data[0].id}/episodes`);
+    const episodesData = await episodesResp.json();
+  
+    anime.episodesList = episodesData.data.map(ep => ({
+        number: ep.attributes.number,
+        title: ep.attributes.titles.en_jp || `Episodio ${ep.attributes.number}`,
+    }));
+
+    return anime;
+};
 
 
 

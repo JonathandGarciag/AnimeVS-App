@@ -1,26 +1,27 @@
-import CryptoJS from "crypto-js"
-import { useEffect, useState } from "react"
-import { reqAnimePortada } from "../services/anime"
+import { useState, useEffect } from 'react';
+import { reqAnimeList, reqAnimeDetails } from '../services/anime';
 
-export const useAnime = () =>{
+export const useAnime = () => {
+    const [animeList, setAnimeList] = useState([]);
+    const [animeDetails, setAnimeDetails] = useState(null);
+    const [page, setPage] = useState(0);
 
-    const [anime, setAnime] = useState()
+    // Función para cargar la lista paginada de animes
+    useEffect(() => {
+        reqAnimeList(page).then(data => setAnimeList(data));
+    }, [page]);
 
-    useEffect(()=>{
-        reqAnimePortada(animeTitle).then((data) =>{
-            setAnime(data.results)
-        })
-    }, [animeTitle])
-    
-    const formatImageUrl = (anime) => {
-            const url_image = anime.posterImage;
-            console.log(url_image);
-            return url_image;
-    }
+    // Función para buscar un anime por nombre
+    const searchAnime = (animeTitle) => {
+        reqAnimeDetails(animeTitle).then(data => setAnimeDetails(data));
+    };
 
-    return{
-        anime,
-        formatImageUrl,
-    }
-}
+    const clearSearch = () => {
+        setAnimeDetails(null); // Limpia los detalles para volver al álbum
+    };
+
+    return { animeList, animeDetails, searchAnime, setPage, page, clearSearch };
+};
+
+
 
